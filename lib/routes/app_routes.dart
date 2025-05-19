@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/home_screen.dart';
-import '../screens/habit_detail_screen.dart';
+import '../screens/fachadas_screen/habitos/habit_detail_screen.dart';
 import '../models/habit.dart';
 
 class AppRoutes {
