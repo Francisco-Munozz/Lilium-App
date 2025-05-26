@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:lilium_app/screens/screens.dart';
 
 class BotonGuardarNota extends StatelessWidget {
-  const BotonGuardarNota({super.key});
+  final VoidCallback onTap;
+  const BotonGuardarNota({super.key, required this.onTap});
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => NotesScreen()),
-        );
-      },
+      onTap: onTap,
       borderRadius: BorderRadius.circular(50),
       child: Container(
         height: 60,

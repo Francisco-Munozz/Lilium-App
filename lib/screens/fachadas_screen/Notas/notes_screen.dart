@@ -12,6 +12,28 @@ class NotesScreen extends StatelessWidget {
       appBar: AppBar(
         toolbarHeight: 80,
         backgroundColor: Color.fromARGB(255, 219, 175, 72),
+        elevation: 0,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Container(
+              height: screenAlto * 0.05,
+              width: screenAncho * 0.7,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.all(Radius.circular(40)),
+                color: Color.fromARGB(255, 217, 217, 217),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [Text('Buscar notas'), Icon(Icons.search)],
+                ),
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
       ),
       body: Stack(
         children: [

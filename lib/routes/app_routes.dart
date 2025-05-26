@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import '../screens/home_screen.dart';
-import '../screens/fachadas_screen/habitos/habit_detail_screen.dart';
-import '../models/habit.dart';
 
 class AppRoutes {
   static const String home = '/';
@@ -11,12 +9,6 @@ class AppRoutes {
     switch (settings.name) {
       case home:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
-
-      case habitDetail:
-        final habit = settings.arguments as Habit;
-        return MaterialPageRoute(
-          builder: (_) => HabitDetailScreen(habit: habit),
-        );
 
       default:
         return MaterialPageRoute(

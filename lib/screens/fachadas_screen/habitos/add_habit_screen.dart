@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:lilium_app/screens/screens.dart';
 
+// Pantalla de la fachada Habit Tracker que permite al usuario agregar un nuevo hábito (nombre del hábito y emoji)
+// El usuario puede ingresar el nombre y pin secreto para acceder a la app real
 class AddHabitScreen extends StatefulWidget {
   const AddHabitScreen({super.key});
 
@@ -8,61 +11,75 @@ class AddHabitScreen extends StatefulWidget {
 }
 
 class _AddHabitScreenState extends State<AddHabitScreen> {
-  final TextEditingController _habitNameController = TextEditingController();
-  final TextEditingController _emojiController = TextEditingController();
-
-  @override
-  void dispose() {
-    _habitNameController.dispose();
-    _emojiController.dispose();
-    super.dispose();
-  }
+  final TextEditingController _habitNameController =
+      TextEditingController(); // Para el nombre del hábito
+  final TextEditingController _emojiController =
+      TextEditingController(); // Para el emoji
 
   void _saveHabit() {
     final habitName = _habitNameController.text;
     final emoji = _emojiController.text;
 
+    // Validación temporal para la app real
+    // Si el nombre del hábito ingresado es 'yo' y el emoji es '1234', se redirige a la pantalla de la app real
+    if (habitName == 'yo' && emoji == '1234') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MainAppScreen()),
+      );
+      return;
+    }
+
+    // Si no cumple la validación, sigue el flujo normal
+
     if (habitName.isNotEmpty && emoji.isNotEmpty) {
       Navigator.pop(context);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, completa ambos campos.')),
-      );
+      // Si los campos están vacios envia un aviso
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Completa ambos campos.')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF1),
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text(
-          'Nuevo Hábito',
-          style: TextStyle(
-            fontSize: 21,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF333333),
-          ),
+        backgroundColor: colorScheme.secondary,
+        elevation: 0,
+        title: Row(
+          children: [
+            const Text('Mi nuevo Hábito'),
+            const Spacer(),
+            Image.asset(
+              'assets/images/habit_tracker_logo.png',
+              height: 50,
+              color: colorScheme.surface,
+            ),
+          ],
         ),
-        backgroundColor: const Color(0xFFFF6F61),
-        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            // Ingreso del nombre del hábito
+            Text(
               'Nombre del hábito',
-              style: TextStyle(
-                fontSize: 18,
+              style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _habitNameController,
+              keyboardType: TextInputType.text,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
@@ -71,19 +88,21 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),
-            const Text(
+
+            // Ingreso del emoji del hábito
+            Text(
               'Emoji',
-              style: TextStyle(
-                fontSize: 18,
+              style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
               ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _emojiController,
+              keyboardType: TextInputType.text,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
@@ -92,23 +111,25 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
+              style: theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 40),
+
+            // Botón para guardar el hábito
             ElevatedButton(
               onPressed: _saveHabit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF6F61),
+                backgroundColor: colorScheme.secondary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Guardar Hábito',
-                style: TextStyle(
-                  fontSize: 18,
+                style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFFFBF1),
+                  color: colorScheme.surface,
                 ),
               ),
             ),

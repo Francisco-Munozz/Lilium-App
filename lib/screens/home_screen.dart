@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lilium_app/screens/fachadas_screen/Notas/notes_screen.dart';
-import 'package:lilium_app/screens/fachadas_screen/habitos/habit_tracker_screen.dart';
+import 'package:lilium_app/screens/screens.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,13 +19,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _redireccionarSegunPreferencia() async {
     final prefs = await SharedPreferences.getInstance();
     final pantalla =
-        prefs.getString('pantalla_preferida') ?? 'hola'; // 👈 Valor por defecto
+        prefs.getString('pantalla_preferida') ?? 'notas'; // Valor por defecto
 
     Widget destino;
     if (pantalla == 'habits') {
       destino = const HabitTrackerScreen(); // Reemplaza con tu pantalla real
-    } else {
+    }
+    if (pantalla == 'notas') {
       destino = const NotesScreen(); // Reemplaza con tu pantalla real
+    } else {
+      destino = const MainAppScreen(); // Reemplaza con tu pantalla real
     }
 
     // Redirige sin dejar esta pantalla en el stack
