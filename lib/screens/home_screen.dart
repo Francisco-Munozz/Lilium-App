@@ -19,13 +19,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _redireccionarSegunPreferencia() async {
     final prefs = await SharedPreferences.getInstance();
     final pantalla =
-        prefs.getString('pantalla_preferida') ?? 'notas'; // Valor por defecto
+        prefs.getString('pantalla_preferida') ?? 'habits'; // Valor por defecto
 
     Widget destino;
     if (pantalla == 'habits') {
       destino = const HabitTrackerScreen(); // Reemplaza con tu pantalla real
-    }
-    if (pantalla == 'notas') {
+    } else if (pantalla == 'notas') {
       destino = const NotesScreen(); // Reemplaza con tu pantalla real
     } else {
       destino = const MainAppScreen(); // Reemplaza con tu pantalla real
