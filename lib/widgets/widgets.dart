@@ -1,3 +1,6 @@
+export 'package:lilium_app/widgets/contactos_widget.dart';
+export 'package:lilium_app/widgets/card_cajas.dart';
+export 'package:lilium_app/widgets/cajas_circulares_colores.dart';
 export 'package:lilium_app/widgets/boton_guardar_nota.dart';
 export 'package:lilium_app/widgets/agregar_nota_contenedor.dart';
 export 'package:lilium_app/widgets/boton_otra_nota.dart';
