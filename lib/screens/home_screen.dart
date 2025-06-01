@@ -24,8 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     Widget destino;
     if (pantalla == 'habits') {
       destino = const HabitTrackerScreen(); // Reemplaza con tu pantalla real
-    }
-    if (pantalla == 'notas') {
+    } else if (pantalla == 'notas') {
       destino = const NotesScreen(); // Reemplaza con tu pantalla real
     } else {
       destino = const MainAppScreen(); // Reemplaza con tu pantalla real

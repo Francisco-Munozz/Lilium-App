@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lilium_app/theme/theme.dart';
 import 'package:lilium_app/screens/screens.dart';
+import 'package:lilium_app/widgets/card_cajas.dart';
 
 // Pantalla principal de la app real
 // El usuario puede acceder a las funcionalidades de la app (contactos de emergencia, configuración de la app, grabación manual y ayuda)
@@ -53,66 +54,47 @@ class MainAppScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            _buildCard(
-              context,
+            CardCajas(
               title: 'Contactos de emergencia',
               color: const Color(0xFFFFD6A5),
               icon: Icons.phone_in_talk_rounded,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ContactosScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
-            _buildCard(
-              context,
+            CardCajas(
               title: 'Configuración de la aplicación',
               color: const Color(0xFFA0E7E5),
               icon: Icons.settings,
             ),
             const SizedBox(height: 16),
-            _buildCard(
-              context,
+            CardCajas(
               title: 'Grabación manual',
               color: const Color(0xFFB4F8C8),
               icon: Icons.mic_rounded,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const GrabacionManualScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
-            _buildCard(
-              context,
+            CardCajas(
               title: 'Recursos y ayuda',
               color: const Color(0xFFFFC3A0),
               icon: Icons.help_outline_rounded,
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildCard(
-    BuildContext context, {
-    required String title,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Card(
-      color: color,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 4,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 16,
-          horizontal: 20,
-        ),
-        leading: Icon(icon, size: 32, color: const Color(0xFF333333)),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF333333),
-          ),
-        ),
-        onTap: () {
-          // Aqui va lo que se va a hacer cuando se presionen las tarjetas :)
-        },
       ),
     );
   }
