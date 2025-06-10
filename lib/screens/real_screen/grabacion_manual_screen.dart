@@ -1,13 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:lilium_app/theme/theme.dart';
-import 'package:lilium_app/screens/screens.dart';
-import 'package:lilium_app/widgets/widgets.dart';
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_sound/public/flutter_sound_recorder.dart';
 
 class GrabacionManualScreen extends StatefulWidget {
   const GrabacionManualScreen({super.key});
@@ -65,7 +61,9 @@ class _GrabacionManualScreenState extends State<GrabacionManualScreen> {
         }
       });
     } catch (e) {
-      print("Error al iniciar la grabación: $e");
+      if (kDebugMode) {
+        print("Error al iniciar la grabación: $e");
+      }
     }
   }
 

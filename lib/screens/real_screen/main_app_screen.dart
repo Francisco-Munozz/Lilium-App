@@ -5,6 +5,7 @@ import 'package:lilium_app/widgets/card_cajas.dart';
 
 // Pantalla principal de la app real
 // El usuario puede acceder a las funcionalidades de la app (contactos de emergencia, configuración de la app, grabación manual y ayuda)
+
 class MainAppScreen extends StatelessWidget {
   const MainAppScreen({super.key});
 
@@ -72,6 +73,13 @@ class MainAppScreen extends StatelessWidget {
               title: 'Configuración de la aplicación',
               color: const Color(0xFFA0E7E5),
               icon: Icons.settings,
+              onTap:
+                  () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  ),
             ),
             const SizedBox(height: 16),
             CardCajas(
@@ -92,6 +100,14 @@ class MainAppScreen extends StatelessWidget {
               title: 'Recursos y ayuda',
               color: const Color(0xFFFFC3A0),
               icon: Icons.help_outline_rounded,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const RecursosAyudaScreen(),
+                  ),
+                );
+              },
             ),
           ],
         ),

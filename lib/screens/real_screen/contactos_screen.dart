@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:lilium_app/screens/screens.dart';
 import 'package:lilium_app/widgets/widgets.dart';
-
 import 'package:lilium_app/theme/theme.dart';
 
 class ContactosScreen extends StatefulWidget {
@@ -11,39 +12,79 @@ class ContactosScreen extends StatefulWidget {
 }
 
 class _ContactosScreenState extends State<ContactosScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _contacto1Controller = TextEditingController();
-  final TextEditingController _contacto2Controller = TextEditingController();
-  final TextEditingController _contacto3Controller = TextEditingController();
+  late SharedPreferences _prefs;
+  bool _loading = true;
 
-  void _guardarNota() {
-    final contacto1 = _contacto1Controller.text.trim();
-    final contacto2 = _contacto2Controller.text.trim();
-    final contacto3 = _contacto3Controller.text.trim();
-
-    if (contacto1.isEmpty || contacto2.isEmpty || contacto3.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Completa los campos')));
-      return;
-    }
-
-    // Aquí podrías guardar la nota en una lista, base de datos o API
-    Navigator.pop(context); // Volver a la pantalla anterior
-  }
+  List<String> contactos = ["", ""];
 
   @override
-  void dispose() {
-    _contacto1Controller.dispose();
-    _contacto2Controller.dispose();
-    _contacto3Controller.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _initPrefs();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
+    setState(() {
+      for (int i = 0; i < contactos.length; i++) {
+        contactos[i] = _prefs.getString('contacto_$i') ?? "";
+      }
+      _loading = false;
+    });
+  }
+
+  Future<void> _editarContacto(int index) async {
+    final TextEditingController controller = TextEditingController(
+      text: contactos[index],
+    );
+
+    final nuevoContacto = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Editar número de contacto'),
+          content: TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.phone,
+            decoration: const InputDecoration(
+              labelText: 'Número',
+              hintText: 'Ingresa nuevo número',
+            ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.pop(context),
+            ),
+            ElevatedButton(
+              child: const Text('Guardar'),
+              onPressed: () {
+                if (controller.text.trim().isNotEmpty) {
+                  Navigator.pop(context, controller.text.trim());
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (nuevoContacto != null) {
+      setState(() {
+        contactos[index] = nuevoContacto;
+      });
+      await _prefs.setString('contacto_$index', nuevoContacto);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     double screenAncho = MediaQuery.of(context).size.width;
     double screenAlto = MediaQuery.of(context).size.height;
+
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -52,7 +93,7 @@ class _ContactosScreenState extends State<ContactosScreen> {
         backgroundColor: const Color(0xFFFFFBF1),
         elevation: 0,
         foregroundColor: AppColors.primaryText,
-        title: Text("Contacto de emergencia"),
+        title: const Text("Contacto de emergencia"),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(color: Colors.grey.shade300, height: 1.0),
@@ -66,10 +107,10 @@ class _ContactosScreenState extends State<ContactosScreen> {
             children: [
               SizedBox(height: screenAlto * 0.04),
               CajasCircularesColores(
-                color: Color(0xFFFFD6A5),
+                color: const Color(0xFFFFD6A5),
                 texto: const Text(
                   "Define tus contactos",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                 ),
                 ancho: screenAncho * 0.69,
               ),
@@ -82,7 +123,7 @@ class _ContactosScreenState extends State<ContactosScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(),
                       offset: const Offset(0, 4),
                       blurRadius: 6,
                     ),
@@ -90,29 +131,71 @@ class _ContactosScreenState extends State<ContactosScreen> {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(height: screenAlto * 0.05),
-                    ContactosWidget(index: "1.", telefono: "9 3733 7524"),
-                    SizedBox(height: screenAlto * 0.06),
-                    ContactosWidget(index: "2.", telefono: "9 3733 7524"),
-                    SizedBox(height: screenAlto * 0.06),
-                    ContactosWidget(index: "3.", telefono: "9 3733 7524"),
-                    SizedBox(height: screenAlto * 0.05),
-                  ],
+                  children: List.generate(contactos.length, (index) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: screenAlto * 0.02,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "${index + 1}.",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            width: screenAncho * 0.5,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 16,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.grey.shade400),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              contactos[index],
+                              style: const TextStyle(fontSize: 18),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.black54),
+                            onPressed: () => _editarContacto(index),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
                 ),
               ),
               SizedBox(height: screenAlto * 0.05),
               CajasCircularesColores(
-                color: Color(0xFFFFD6A5),
+                color: const Color(0xFFFFD6A5),
                 texto: const Text(
                   "Confirmar",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                 ),
                 ancho: screenAncho * 0.4,
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => MainAppScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const MainAppScreen(),
+                    ),
                   );
                 },
               ),
