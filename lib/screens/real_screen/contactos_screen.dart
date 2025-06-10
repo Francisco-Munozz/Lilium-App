@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lilium_app/screens/screens.dart';
 import 'package:lilium_app/widgets/widgets.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:lilium_app/theme/theme.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ContactosScreen extends StatefulWidget {
   const ContactosScreen({super.key});
@@ -11,26 +12,119 @@ class ContactosScreen extends StatefulWidget {
 }
 
 class _ContactosScreenState extends State<ContactosScreen> {
-  final _formKey = GlobalKey<FormState>();
   final TextEditingController _contacto1Controller = TextEditingController();
   final TextEditingController _contacto2Controller = TextEditingController();
   final TextEditingController _contacto3Controller = TextEditingController();
+  bool _cargando = true;
+  List<String> listaDeContactosId = [];
 
-  void _guardarNota() {
-    final contacto1 = _contacto1Controller.text.trim();
-    final contacto2 = _contacto2Controller.text.trim();
-    final contacto3 = _contacto3Controller.text.trim();
+  @override
+  void initState() {
+    super.initState();
+    _cargarContactosDesdeFirestore();
+  }
 
-    if (contacto1.isEmpty || contacto2.isEmpty || contacto3.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Completa los campos')));
+  bool esNumeroValido(String numero) {
+    return RegExp(r'^\+569\d{8}$').hasMatch(numero);
+  }
+
+  Future<void> _cargarContactosDesdeFirestore() async {
+    setState(() => _cargando = true);
+
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Traemos como máximo 3 teléfonos asociados al usuario
+    final snap =
+        await FirebaseFirestore.instance
+            .collection('Contactos')
+            .where('ID_Usuarios', arrayContains: userId)
+            .limit(3)
+            .get();
+
+    final telefonos = snap.docs
+        .map((d) => (d['Telefono'] as String?) ?? '')
+        .toList(growable: false);
+
+    if (telefonos.isEmpty) {
+      _contacto1Controller.text = '';
+      _contacto2Controller.text = '';
+      _contacto3Controller.text = '';
+    } else {
+      _contacto1Controller.text = telefonos[0].replaceFirst('+569', '');
+      _contacto2Controller.text = telefonos[1].replaceFirst('+569', '');
+      _contacto3Controller.text = telefonos[2].replaceFirst('+569', '');
+    }
+    setState(() => _cargando = false);
+  }
+
+  Future<void> _guardarContactos() async {
+    final userId = FirebaseAuth.instance.currentUser!.uid;
+
+    // Normalizamos y filtramos vacíos
+    final numeros = {
+      _formatearNumero(_contacto1Controller.text),
+      _formatearNumero(_contacto2Controller.text),
+      _formatearNumero(_contacto3Controller.text),
+    }..removeWhere((n) => n.isEmpty);
+
+    // 💡 Solo permitimos 3
+    if (numeros.length != 3) {
+      _showSnack('Debes ingresar exactamente 3 números');
+      return;
+    }
+    if (numeros.any((n) => !esNumeroValido(n))) {
+      _showSnack('Formato incorrecto: usa +569XXXXXXXX');
       return;
     }
 
-    // Aquí podrías guardar la nota en una lista, base de datos o API
-    Navigator.pop(context); // Volver a la pantalla anterior
+    // --- SINCRONIZAMOS ---
+    final batch = FirebaseFirestore.instance.batch();
+    final coleccion = FirebaseFirestore.instance.collection('Contactos');
+
+    // 1. Contactos que YA tenía el usuario → quitamos los que dejó de usar
+    final actuales =
+        await coleccion.where('ID_Usuarios', arrayContains: userId).get();
+
+    for (final doc in actuales.docs) {
+      final tel = doc['Telefono'] as String;
+      if (!numeros.contains(tel)) {
+        batch.update(doc.reference, {
+          'ID_Usuarios': FieldValue.arrayRemove([userId]),
+        });
+      }
+    }
+
+    // 2. Números nuevos o existentes → aseguramos que contengan el userId
+    for (final numero in numeros) {
+      final q =
+          await coleccion.where('Telefono', isEqualTo: numero).limit(1).get();
+
+      if (q.docs.isEmpty) {
+        // No existía → lo creamos
+        final ref = coleccion.doc(); // id automático
+        batch.set(ref, {
+          'Telefono': numero,
+          'ID_Usuarios': [userId],
+        });
+      } else {
+        // Existe → nos aseguramos de estar en ID_Usuarios
+        final ref = q.docs.first.reference;
+        batch.update(ref, {
+          'ID_Usuarios': FieldValue.arrayUnion([userId]),
+        });
+      }
+    }
+
+    await batch.commit();
+    Navigator.pop(context, true);
   }
+
+  // Helper
+  String _formatearNumero(String sinPrefijo) =>
+      sinPrefijo.trim().isEmpty ? '' : '+569${sinPrefijo.trim()}';
+
+  void _showSnack(String msg) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 
   @override
   void dispose() {
@@ -44,6 +138,13 @@ class _ContactosScreenState extends State<ContactosScreen> {
   Widget build(BuildContext context) {
     double screenAncho = MediaQuery.of(context).size.width;
     double screenAlto = MediaQuery.of(context).size.height;
+    if (_cargando) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(), // ⏳ Indicador de carga
+        ),
+      );
+    }
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -78,7 +179,10 @@ class _ContactosScreenState extends State<ContactosScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFFBF1),
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: Border.all(
+                    color: Color.fromARGB(100, 255, 255, 255),
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -92,11 +196,140 @@ class _ContactosScreenState extends State<ContactosScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     SizedBox(height: screenAlto * 0.05),
-                    ContactosWidget(index: "1.", telefono: "9 3733 7524"),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "1.",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                        ),
+                        CajasCircularesColores(
+                          color: Color(0xFFFFFBF1),
+                          texto: Text(
+                            "+569",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
+                          ),
+                          ancho: screenAncho * 0.2,
+                        ),
+                        SizedBox(
+                          width: screenAncho * 0.4,
+                          height: screenAlto * 0.05,
+                          child: TextFormField(
+                            controller: _contacto1Controller,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              hintText: ' Ej: 12345678',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                              filled: true,
+                              fillColor: Color(0xFFFFFBF1),
+                            ),
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: screenAlto * 0.06),
-                    ContactosWidget(index: "2.", telefono: "9 3733 7524"),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "2.",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                        ),
+                        CajasCircularesColores(
+                          color: Color(0xFFFFFBF1),
+                          texto: Text(
+                            "+569",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
+                          ),
+                          ancho: screenAncho * 0.2,
+                        ),
+                        SizedBox(
+                          width: screenAncho * 0.4,
+                          height: screenAlto * 0.05,
+                          child: TextFormField(
+                            controller: _contacto2Controller,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              hintText: 'Ej: 12345678',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                              filled: true,
+                              fillColor: Color(0xFFFFFBF1),
+                            ),
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: screenAlto * 0.06),
-                    ContactosWidget(index: "3.", telefono: "9 3733 7524"),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Text(
+                          "3.",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                        ),
+                        CajasCircularesColores(
+                          color: Color(0xFFFFFBF1),
+                          texto: Text(
+                            "+569",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
+                          ),
+                          ancho: screenAncho * 0.2,
+                        ),
+                        SizedBox(
+                          width: screenAncho * 0.4,
+                          height: screenAlto * 0.05,
+                          child: TextFormField(
+                            controller: _contacto3Controller,
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              hintText: 'Ej: 12345678',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(40),
+                              ),
+                              filled: true,
+                              fillColor: Color(0xFFFFFBF1),
+                            ),
+                            style: TextStyle(fontSize: 20),
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: screenAlto * 0.05),
                   ],
                 ),
@@ -109,12 +342,7 @@ class _ContactosScreenState extends State<ContactosScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                 ),
                 ancho: screenAncho * 0.4,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => MainAppScreen()),
-                  );
-                },
+                onTap: _guardarContactos,
               ),
             ],
           ),

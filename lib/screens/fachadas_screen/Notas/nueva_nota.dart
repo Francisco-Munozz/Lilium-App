@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lilium_app/widgets/widgets.dart';
 import 'package:lilium_app/screens/screens.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class NuevaNotaScreen extends StatefulWidget {
   const NuevaNotaScreen({super.key});
@@ -12,12 +13,29 @@ class _NuevaNotaScreenState extends State<NuevaNotaScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _tituloController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
+  Future<bool> reautenticarUsuario(String password) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser!;
+      final cred = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(cred);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
-  void _guardarNota() {
+  Future<void> _guardarNota() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email;
+    final passwordIngresada = _descripcionController.text.trim();
+    final reautenticado = await reautenticarUsuario(passwordIngresada);
     final titulo = _tituloController.text.trim();
     final descripcion = _descripcionController.text.trim();
 
-    if (titulo == 'yo' && descripcion == '1234') {
+    if (titulo == email && reautenticado) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const MainAppScreen()),

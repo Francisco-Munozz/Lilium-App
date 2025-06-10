@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lilium_app/theme/theme.dart';
 import 'package:lilium_app/screens/screens.dart';
 import 'package:lilium_app/widgets/card_cajas.dart';
+import 'package:lilium_app/widgets/widgets.dart';
 
 // Pantalla principal de la app real
 // El usuario puede acceder a las funcionalidades de la app (contactos de emergencia, configuración de la app, grabación manual y ayuda)
@@ -10,6 +11,8 @@ class MainAppScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenAncho = MediaQuery.of(context).size.width;
+    double screenAlto = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: const Color(0xFFFFFBF1),
       appBar: AppBar(
@@ -39,7 +42,7 @@ class MainAppScreen extends StatelessWidget {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(15.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -58,13 +61,26 @@ class MainAppScreen extends StatelessWidget {
               title: 'Contactos de emergencia',
               color: const Color(0xFFFFD6A5),
               icon: Icons.phone_in_talk_rounded,
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                final resultado = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const ContactosScreen(),
                   ),
                 );
+
+                if (resultado == 'contactos_guardados') {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('¡Contactos guardados exitosamente!'),
+                      backgroundColor: Colors.green,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
               },
             ),
             const SizedBox(height: 16),
@@ -93,6 +109,8 @@ class MainAppScreen extends StatelessWidget {
               color: const Color(0xFFFFC3A0),
               icon: Icons.help_outline_rounded,
             ),
+            SizedBox(height: screenAlto * 0.1),
+            Align(alignment: Alignment.center, child: BotonCerrarSesion()),
           ],
         ),
       ),
