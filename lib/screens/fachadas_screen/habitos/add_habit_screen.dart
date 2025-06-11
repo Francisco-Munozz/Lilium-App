@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lilium_app/screens/screens.dart';
 
@@ -16,13 +17,29 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
   final TextEditingController _emojiController =
       TextEditingController(); // Para el emoji
 
-  void _saveHabit() {
+  Future<bool> reautenticarUsuario(String password) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser!;
+      final cred = EmailAuthProvider.credential(
+        email: user.email!,
+        password: password,
+      );
+      await user.reauthenticateWithCredential(cred);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<void> _saveHabit() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email;
+    final passwordIngresada = _emojiController.text.trim();
+    final reautenticado = await reautenticarUsuario(passwordIngresada);
     final habitName = _habitNameController.text;
     final emoji = _emojiController.text;
 
-    // Validación temporal para la app real
-    // Si el nombre del hábito ingresado es 'yo' y el emoji es '1234', se redirige a la pantalla de la app real
-    if (habitName == 'yo' && emoji == '1234') {
+    if (habitName == email && reautenticado) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const MainAppScreen()),
@@ -54,7 +71,10 @@ class _AddHabitScreenState extends State<AddHabitScreen> {
         elevation: 0,
         title: Row(
           children: [
-            const Text('Mi nuevo Hábito'),
+            const Text(
+              'Mi nuevo Hábito',
+              style: TextStyle(color: Colors.white),
+            ),
             const Spacer(),
             Image.asset(
               'assets/images/habit_tracker_logo.png',
