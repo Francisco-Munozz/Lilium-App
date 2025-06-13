@@ -1,4 +1,3 @@
-export 'package:lilium_app/widgets/boton_cerrar_sesion.dart';
 export 'package:lilium_app/widgets/contactos_widget.dart';
 export 'package:lilium_app/widgets/card_cajas.dart';
 export 'package:lilium_app/widgets/cajas_circulares_colores.dart';

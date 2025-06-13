@@ -1,3 +1,11 @@
+export 'package:lilium_app/screens/real_screen/seleccion_fachada_confg.dart';
+export 'package:lilium_app/screens/login_screens/contactos_iniciales_screen.dart';
+export 'package:lilium_app/screens/login_screens/permisos_screen.dart';
+export 'package:lilium_app/screens/login_screens/seleccion_activacion_screen.dart';
+export 'package:lilium_app/screens/login_screens/seleccion_fachada_screen.dart';
+export 'package:lilium_app/screens/real_screen/configuraciones_screen.dart';
+export 'package:lilium_app/screens/real_screen/bullying_screen.dart';
+export 'package:lilium_app/screens/real_screen/recursos_ayuda_screen.dart';
 export 'package:lilium_app/screens/login_screens/login_screen.dart';
 export 'package:lilium_app/screens/real_screen/grabacion_manual_screen.dart';
 export 'package:lilium_app/screens/real_screen/contactos_screen.dart';

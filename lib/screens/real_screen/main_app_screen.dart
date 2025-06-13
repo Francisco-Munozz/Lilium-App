@@ -88,6 +88,14 @@ class MainAppScreen extends StatelessWidget {
               title: 'Configuración de la aplicación',
               color: const Color(0xFFA0E7E5),
               icon: Icons.settings,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 16),
             CardCajas(
@@ -108,9 +116,16 @@ class MainAppScreen extends StatelessWidget {
               title: 'Recursos y ayuda',
               color: const Color(0xFFFFC3A0),
               icon: Icons.help_outline_rounded,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RecursosAyudaScreen(),
+                  ),
+                );
+              },
             ),
             SizedBox(height: screenAlto * 0.1),
-            Align(alignment: Alignment.center, child: BotonCerrarSesion()),
           ],
         ),
       ),
